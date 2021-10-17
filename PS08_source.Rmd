@@ -335,8 +335,6 @@ Type your complete sentence answer here using inline R code and delete this comm
 
 ***
 
-![](https://ecologyofeducation.net/wsite/wp-content/uploads/2011/09/Boots-with-Laces-border.jpg)
-
 # Bootstrap Sampling Distribution & Confidence Intervals with Categorical Variables
 
 The procedure for generating a bootstrap sampling distribution is VERY similar for categorical data. As an example we will generate a bootstrap sampling distribution for the proportion of respondents that identified as a Person of Color. 
