@@ -243,7 +243,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Problem Set 08</h1>
 <h4 class="author">Your Name Goes Here</h4>
-<h4 class="date">Last compiled: October 25, 2021 at 02:43:55 PM</h4>
+<h4 class="date">Last compiled: October 27, 2021 at 07:01:57 AM</h4>
 
 </div>
 
@@ -360,16 +360,16 @@ Figure 2.2: Bootstrap distribution computed with <code>visualize()</code>
 qnorm(0.975)</code></pre>
 <pre><code>[1] 1.959964</code></pre>
 <pre class="r"><code>boot_distrib_tv %&gt;% 
-  summarize(mean = mean(boot_stat), 
+  summarize(Mean = mean(boot_stat), 
             se = sd(boot_stat), 
-            lower_ci = mean - (qnorm(0.975) * se), 
-            upper_ci = mean + (qnorm(0.975) * se)) -&gt; bnci_tv
+            lower_ci = Mean - (qnorm(0.975) * se), 
+            upper_ci = Mean + (qnorm(0.975) * se)) -&gt; bnci_tv
 bnci_tv</code></pre>
 <div class="kable-table">
 <table>
 <thead>
 <tr class="header">
-<th align="right">mean</th>
+<th align="right">Mean</th>
 <th align="right">se</th>
 <th align="right">lower_ci</th>
 <th align="right">upper_ci</th>
@@ -638,15 +638,15 @@ head(boot_distrib_POC)</code></pre>
 <h3>CI Using the 95% Rule</h3>
 <p>The following will calculate the 95% confidence interval for the proportion of people that identified as <code>POC</code> using the 95% rule.</p>
 <pre class="r"><code>boot_distrib_POC %&gt;% 
-  summarize(mean = mean(boot_stat), 
+  summarize(Mean = mean(boot_stat), 
             se = sd(boot_stat), 
-            lower_ci = mean - (qnorm(0.975) * se), 
-            upper_ci = mean + (qnorm(0.975) * se))</code></pre>
+            lower_ci = Mean - (qnorm(0.975) * se), 
+            upper_ci = Mean + (qnorm(0.975) * se))</code></pre>
 <div class="kable-table">
 <table>
 <thead>
 <tr class="header">
-<th align="right">mean</th>
+<th align="right">Mean</th>
 <th align="right">se</th>
 <th align="right">lower_ci</th>
 <th align="right">upper_ci</th>

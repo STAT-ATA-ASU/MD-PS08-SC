@@ -170,10 +170,10 @@ We can thus apply the 95% rule, like so:
 # Note that z_{0.975} = 1.96 
 qnorm(0.975)
 boot_distrib_tv %>% 
-  summarize(mean = mean(boot_stat), 
+  summarize(Mean = mean(boot_stat), 
             se = sd(boot_stat), 
-            lower_ci = mean - (qnorm(0.975) * se), 
-            upper_ci = mean + (qnorm(0.975) * se)) -> bnci_tv
+            lower_ci = Mean - (qnorm(0.975) * se), 
+            upper_ci = Mean + (qnorm(0.975) * se)) -> bnci_tv
 bnci_tv
 # Or using infer
 xbar <- boot_dist_tv_infer %>% 
@@ -369,10 +369,10 @@ The following will calculate the 95% confidence interval for the proportion of p
 
 ```{r}
 boot_distrib_POC %>% 
-  summarize(mean = mean(boot_stat), 
+  summarize(Mean = mean(boot_stat), 
             se = sd(boot_stat), 
-            lower_ci = mean - (qnorm(0.975) * se), 
-            upper_ci = mean + (qnorm(0.975) * se))
+            lower_ci = Mean - (qnorm(0.975) * se), 
+            upper_ci = Mean + (qnorm(0.975) * se))
 ```
 
 
