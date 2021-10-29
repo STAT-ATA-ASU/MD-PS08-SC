@@ -1,7 +1,7 @@
 
 ---
 title: "Problem Set 08"
-author: "Your Name Goes Here"
+author: "Partial Solution"
 date: 'Last compiled: `r format(Sys.time(), "%B %d, %Y at %X")`'
 output:
   bookdown::html_document2:
@@ -16,15 +16,10 @@ output:
 # Do not edit this code block/chunk!
 library(knitr)
 knitr::opts_chunk$set(echo = TRUE, fig.align = "center", comment = NA, message = FALSE,  warning = FALSE, fig.width = 16/2, fig.height = 9/2)
+library(scales)
 ```
 
 ![](https://i.pinimg.com/originals/8b/a5/6d/8ba56d685c24a243836ace7332f553f7.jpg)
-
-
-```{r, include=FALSE}
-# Do not edit this code block/chunk
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, fig.width = 16/2, fig.height = 9/2)
-```
 
 
 # Background
@@ -71,12 +66,12 @@ The following code tells R to take 1000 bootstrap resamples from the `gss_sample
 ```{r}
 set.seed(42)
 boot_samp_1000 <- gss_sample %>% 
-  rep_sample_n(size = 100, reps = 1000, replace = TRUE)
+  rep_sample_n(size = nrow(gss_sample), reps = 1000, replace = TRUE)
 ```
 
 Note a few important details about the `rep_sample_n` function, and bootstrap sampling in general:
 
-* `size = 100` tells R that each bootstrap resample we take has 100 cases... the size of the original sample
+* `size = nrow(gss_sample)` tells R that each bootstrap resample we take has 100 cases... the size of the original sample
 * `reps = 1000` tells R to take 1000 bootstrap resamples (each of size 100).
 * The `replace = TRUE` argument tells R that in each bootstrap resample, we can include a row from `gss_sample` multiple times. So if for instance, respondent # 12 is the first random resample taken here, respondent 12 is still available to be resampled **again** at random. Thus, some people may appear **multiple times** in our bootstrap resample, and some people from the original data set may not appear at all. 
 * We save the results in a data frame `boot_samp_1000`. 
@@ -98,35 +93,44 @@ Type your complete sentence answer here using inline R code and delete this comm
 
 ## Step 2: Calculate the Bootstrap Statistic{-}
 
-Let's say we want to use the bootstrap resample that we just generated to calculate a confidence interval for the population mean $\mu_{tv}$ of `tvhours`. To do so, we need to know the sample mean $\bar{x}$ of `tvhours` **for each of the 1000 bootstrap resamples**. In this case, the sample mean $\bar{x}$ of `tvhours` for **each bootstrap resample** is our **BOOTSTRAP STATISTIC**.  We can calculate that with three lines of code as follows: 
+Let's say we want to use the bootstrap resample that we just generated to calculate a confidence interval for the population mean $\mu_{tv}$ of `tvhours`. To do so, we need to know the sample mean $\bar{x}$ of `tvhours` **for each of the 1,000 bootstrap resamples**. In this case, the sample mean $\bar{x}$ of `tvhours` for **each bootstrap resample** is our **BOOTSTRAP STATISTIC**.  We can calculate that with three lines of code as follows: 
 
 ```{r}
 boot_distrib_tv <- boot_samp_1000 %>% 
   group_by(replicate) %>% 
-  summarize(boot_stat = mean(tvhours))
+  summarize(stat = mean(tvhours))
+```
+
+Note that:
+
+- The `group_by()` argument tells R to take the sample mean of `tvhours` **separately** for each different `replicate` in the bootstrap resample. 
+- We put the sample mean for each bootstrap resample in a column called `stat`
+
+
+> This is the bootstrap distribution for the mean of `tvhours`! 
+
+```{r}
 # or using infer
 library(infer)
 boot_dist_tv_infer <- gss_sample %>% 
   specify(response = tvhours) %>% 
   generate(reps = 1000, type = "bootstrap") %>% 
   calculate(stat = "mean")
+# using a for loop
+B <- 1000
+bs_mean <- numeric(B)
+for(i in 1:B){
+  bss <- sample(gss_sample$tvhours, size = sum(!is.na(gss_sample$tvhours)), replace = TRUE)
+  bs_mean[i] <- mean(bss)
+}
 ```
-
-Note that:
-
-- The `group_by()` argument tells R to take the sample mean of `tvhours` **separately** for each different `replicate` in the bootstrap resample. 
-- We put the sample mean for each bootstrap resample in a column called `boot_stat`
-
-
-> This is the bootstrap distribution for the mean of `tvhours`! 
-
 
 *** 
 
 Take a look at the `boot_distrib_tv` we just created in RStudio's data viewer. 
 
 
-2.  How many values of the bootstrap statistic `boot_stat` are there?  Please explain **why** there are this many values of the bootstrap statistic. 
+2.  How many values of the bootstrap statistic `stat` are there?  Please explain **why** there are this many values of the bootstrap statistic. 
 
 <div id="answer">
 Type your complete sentence answer here using inline R code and delete this comment.
@@ -139,10 +143,10 @@ Type your complete sentence answer here using inline R code and delete this comm
 
 ## Visualizing the Bootstrap Distribution{-}  
 
-The bootstrap distribution is shown in Figure \@ref(fig:boottvdist) . This is a histogram of the `boot_stat` values from `boot_distrib_tv`. 
+The bootstrap distribution is shown in Figure \@ref(fig:boottvdist) . This is a histogram of the `stat` values from `boot_distrib_tv`. 
 
 ```{r , label  = "boottvdist", fig.height=3, fig.width=5, fig.cap = "Bootstrap distribution of mean TV hours"}
-ggplot(data = boot_distrib_tv, aes(x = boot_stat)) + 
+ggplot(data = boot_distrib_tv, aes(x = stat)) + 
   geom_histogram(color = "white", binwidth = 0.25) + 
   labs(title = "Bootstrap distribution", 
        x = "boostrap statistic (mean tvhours)")
@@ -153,6 +157,12 @@ ggplot(data = boot_distrib_tv, aes(x = boot_stat)) +
 visualize(boot_dist_tv_infer, bins = 9)
 ```
 
+```{r}
+hist(bs_mean, breaks = "Scott", main = "Bootstrap Distribution",
+     xlab = expression(paste(bar(x),"*")), col = "lightblue")
+```
+
+
 ## Step 3: CI from a Bootstrap Resample {-}
 
 ### CI Using the 95% Rule {-}
@@ -161,7 +171,7 @@ We can now use the bootstrap distribution for the sample mean `tvhours` $\bar{x}
 
 $$\text{mean} \pm 1.96 \cdot SD$$
 
-* the mean here would be the mean of the bootstrap distribution 
+* the mean here is the mean of the mean of original sample 
 * the SD here is the standard deviation of the bootstrap distribution, which recall has a special name: the **standard error**.
 
 We can thus apply the 95% rule, like so: 
@@ -169,17 +179,13 @@ We can thus apply the 95% rule, like so:
 ```{r}
 # Note that z_{0.975} = 1.96 
 qnorm(0.975)
-boot_distrib_tv %>% 
-  summarize(Mean = mean(boot_stat), 
-            se = sd(boot_stat), 
-            lower_ci = Mean - (qnorm(0.975) * se), 
-            upper_ci = Mean + (qnorm(0.975) * se)) -> bnci_tv
+(xbar <- mean(gss_sample$tvhours))
+boot_dist_tv_infer %>% 
+  summarize(se = sd(stat), 
+            lower_ci = xbar - (qnorm(0.975) * se), 
+            upper_ci = xbar + (qnorm(0.975) * se)) -> bnci_tv
 bnci_tv
-# Or using infer
-xbar <- boot_dist_tv_infer %>% 
-  summarize(xbar = mean(stat)) %>% 
-  pull()
-xbar
+#
 standard_error_ci <- boot_dist_tv_infer %>% 
   get_confidence_interval(type = "se", point_estimate = xbar, level = 0.95)
 standard_error_ci
@@ -201,17 +207,18 @@ totaling 100%. We can use **the quantiles** of the bootstrap distribution to fin
 
 ```{r}
 bpci_tv <- boot_distrib_tv %>% 
-  summarize(lower_ci = quantile(boot_stat, 0.025), 
-            upper_ci = quantile(boot_stat, 0.975))
+  summarize(lower_ci = quantile(stat, 0.025), 
+            upper_ci = quantile(stat, 0.975))
 
 bpci_tv
 # Or using infer
-boot_dist_tv_infer %>% 
+boot_distrib_tv %>% 
   get_confidence_interval(type = "percentile", level = 0.95)
 # Which is really just doing the following:
-boot_dist_tv_infer %>% 
-  summarize(lower_ci = quantile(stat, 0.025),
+PCI <- boot_distrib_tv %>% 
+            summarize(lower_ci = quantile(stat, 0.025),
             upper_ci = quantile(stat, 0.975))
+PCI
 ```
 
 This method 
@@ -220,21 +227,29 @@ This method
 * Asks R to identify the 0.975 quantile for the bootstrap sample means... this is the value **above** which the other **2.5% of the values of `boot_stat`** fall (or 25 cases in this example  975/1000 = 0.975)
 * The middle 95% of the values fall between these two quantiles
 
-Based on these results, we are 95% confident that the **true mean hours of TV watched $\mu_{tv}$ in the population** is between the upper and lower CI we just calculated. 
+Based on these results, we are 95% confident that the **true mean hours of TV watched $\mu_{tv}$ in the population** is between the lower (`r PCI$lower_ci` hours) and upper (`r PCI$upper_ci` hours) CI endpoints we just calculated. 
 
 ## Visualizing the Confidence Interval {-}
 
-The bootstrap distribution and the 95% **bootstrap percentile** confidence intervals we just calculated are shown in the figure below. This is a histogram of the `boot_stat` values from `boot_distrib_tv`. The green line is the lower bound of the 95% CI, and the blue line is the upper bound. 950 of the 1000 bootstrap resamples had a mean for `tvhours` that fell **between** the green and blue lines...25 of the samples had a mean above the blue line, and 25 of the samples had a mean below the green line. 
+The bootstrap distribution and the 95% **bootstrap percentile** confidence intervals we just calculated are shown in the figure below. This is a histogram of the `boot_stat` values from `boot_distrib_tv`. The green line is the lower bound of the 95% CI, and the blue line is the upper bound. 950 of the 1000 bootstrap resamples had a mean for `tvhours` that fell **between** the green and blue dashed lines...25 of the samples had a mean above the blue dashed line, and 25 of the samples had a mean below the green dashed line. 
 
-```{r echo=FALSE, fig.height=3, fig.width=5}
-ggplot(data = boot_distrib_tv, aes(x = boot_stat)) + 
+```{r, fig.height=3, fig.width=5}
+ggplot(data = boot_distrib_tv, aes(x = stat)) + 
   geom_histogram(color = "black", fill = "pink", binwidth = 0.15) + 
   labs(title = "Bootstrap distribution with 95% CI", 
        x = "boostrap statistic (mean tvhours)") +
-  geom_vline(data = bpci_tv, aes(xintercept = lower_ci), color = "green", lwd = 1) + 
-  geom_vline(data = bpci_tv, aes(xintercept = upper_ci), color = "blue", lwd = 1) +
+  geom_vline(data = bpci_tv, aes(xintercept = lower_ci), color = "green", lwd = 1, lty = "dashed") + 
+  geom_vline(data = bpci_tv, aes(xintercept = upper_ci), color = "blue", lwd = 1, lty = "dashed") +
   theme_bw()
 ```
+
+
+```{r, fig.height=3, fig.width=5}
+boot_dist_tv_infer %>% visualize() +
+  shade_confidence_interval(endpoints = PCI, color = "red", fill = "pink")
+
+```
+
 
 ***
 
@@ -368,11 +383,11 @@ Note that with a categorical variable, the code differs in two important respect
 The following will calculate the 95% confidence interval for the proportion of people that identified as `POC` using the 95% rule. 
 
 ```{r}
+phat <- mean(gss_sample$race=="POC")
 boot_distrib_POC %>% 
-  summarize(Mean = mean(boot_stat), 
-            se = sd(boot_stat), 
-            lower_ci = Mean - (qnorm(0.975) * se), 
-            upper_ci = Mean + (qnorm(0.975) * se))
+  summarize(se = sd(boot_stat), 
+            lower_ci = phat - (qnorm(0.975) * se), 
+            upper_ci = phat + (qnorm(0.975) * se))
 ```
 
 
@@ -387,7 +402,7 @@ boot_distrib_POC %>%
 ```
 
 
-11. Calculate a 95% CI for the **population proportion** of respondents $p$ who identified as **White** using EITHER the percentile or 95% rule method. Note that you will first need to generate the bootstrap distribution for the proportion of respondents who identified as `White`. 
+11. Calculate a 95% CI for the **population proportion** of respondents $p$ who identified as **White** using BOTH the percentile and the 95% rule method. Note that you will first need to generate the bootstrap distribution for the proportion of respondents who identified as `White`. 
 
 ```{r}
 # Type your code and comments inside the code chunk
@@ -398,12 +413,11 @@ boot_distrib_POC %>%
 # Type your code and comments inside the code chunk
 # 95% rule
 
-# percentile
-
 ```
 
 ```{r}
 # Type your code and comments inside the code chunk
+
 
 ```
 
@@ -443,9 +457,9 @@ $$
 We can perform the calculations in R as follows: 
 
 ```{r}
+x_bar = mean(gss_sample$tvhours)
 gss_sample %>% 
-  summarize(x_bar = mean(tvhours), 
-            sd = sd(tvhours), 
+  summarize(sd = sd(tvhours), 
             n = n(), 
             se = sd/sqrt(n), 
             lower_ci = x_bar - qnorm(.975) * se, 
@@ -465,6 +479,7 @@ CI construction method          | lower value   | upper value
 Using boostrap: 95% rule        | X             | Y
 Using boostrap: percentile rule | A             | B
 Using mathematical formula      | P             | Q
+
 
 
 13.  **In your opinion**: would you say these three confidence intervals are similar?
