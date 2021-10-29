@@ -171,7 +171,7 @@ We can now use the bootstrap distribution for the sample mean `tvhours` $\bar{x}
 
 $$\text{mean} \pm 1.96 \cdot SD$$
 
-* the mean here is the mean of the mean of original sample 
+* the mean here is the mean of the original sample 
 * the SD here is the standard deviation of the bootstrap distribution, which recall has a special name: the **standard error**.
 
 We can thus apply the 95% rule, like so: 
