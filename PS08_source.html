@@ -243,7 +243,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Problem Set 08</h1>
 <h4 class="author">Your Name Here</h4>
-<h4 class="date">Last compiled: October 29, 2021 at 09:58:58 AM</h4>
+<h4 class="date">Last compiled: October 31, 2021 at 06:54:00 PM</h4>
 
 </div>
 
@@ -362,7 +362,7 @@ Figure 2.2: Bootstrap distribution computed with <code>visualize()</code>
 <p>We can now use the bootstrap distribution for the sample mean <code>tvhours</code> <span class="math inline">\(\bar{x}\)</span> to calculate a 95% confidence interval for the population mean <code>tvhours</code> <span class="math inline">\(\mu_{tv}\)</span>, using the “95% rule for bell shaped distributions”, which states that the middle 95% of values of a bell/normal shaped distribution are between</p>
 <p><span class="math display">\[\text{mean} \pm 1.96 \cdot SD\]</span></p>
 <ul>
-<li>the mean here is the mean of the mean of original sample</li>
+<li>the mean here is the mean of the original sample</li>
 <li>the SD here is the standard deviation of the bootstrap distribution, which recall has a special name: the <strong>standard error</strong>.</li>
 </ul>
 <p>We can thus apply the 95% rule, like so:</p>
@@ -419,9 +419,9 @@ standard_error_ci</code></pre>
 <div id="ci-using-the-percentile-method" class="section level2 unnumbered">
 <h2>CI Using the Percentile Method</h2>
 <p>You can also calculate a 95% confidence interval using the percentile method. The logic goes like this:</p>
-<p>Since our bootstrap resample had 1000 values of <code>boot_stat</code>:</p>
+<p>Since our bootstrap resample had 1000 values of <code>stat</code>:</p>
 <ul>
-<li>950 of the <code>boot_stat</code> values fall <strong>inside</strong> this 95% confidence interval, i.e. 95%</li>
+<li>950 of the <code>stat</code> values fall <strong>inside</strong> this 95% confidence interval, i.e. 95%</li>
 <li>25 values fall <strong>below</strong> it. i.e. the lower 2.5%</li>
 <li>25 values fall <strong>above</strong> it. i.e. the higher 2.5%</li>
 </ul>
@@ -489,15 +489,15 @@ PCI</code></pre>
 </div>
 <p>This method</p>
 <ul>
-<li>Asks R to identify the 0.025 quantile of the bootstrap sample means… this is the value <strong>below</strong> which <strong>2.5% of the values of <code>boot_stat</code></strong> fall (or 25 cases in this example… 25/1000 = 0.025)</li>
-<li>Asks R to identify the 0.975 quantile for the bootstrap sample means… this is the value <strong>above</strong> which the other <strong>2.5% of the values of <code>boot_stat</code></strong> fall (or 25 cases in this example 975/1000 = 0.975)</li>
+<li>Asks R to identify the 0.025 quantile of the bootstrap sample means… this is the value <strong>below</strong> which <strong>2.5% of the values of <code>stat</code></strong> fall (or 25 cases in this example… 25/1000 = 0.025)</li>
+<li>Asks R to identify the 0.975 quantile for the bootstrap sample means… this is the value <strong>above</strong> which the other <strong>2.5% of the values of <code>stat</code></strong> fall (or 25 cases in this example 975/1000 = 0.975)</li>
 <li>The middle 95% of the values fall between these two quantiles</li>
 </ul>
 <p>Based on these results, we are 95% confident that the <strong>true mean hours of TV watched <span class="math inline">\(\mu_{tv}\)</span> in the population</strong> is between the lower (2.51 hours) and upper (3.89 hours) CI endpoints we just calculated.</p>
 </div>
 <div id="visualizing-the-confidence-interval" class="section level2 unnumbered">
 <h2>Visualizing the Confidence Interval</h2>
-<p>The bootstrap distribution and the 95% <strong>bootstrap percentile</strong> confidence intervals we just calculated are shown in the figure below. This is a histogram of the <code>boot_stat</code> values from <code>boot_distrib_tv</code>. The green line is the lower bound of the 95% CI, and the blue line is the upper bound. 950 of the 1000 bootstrap resamples had a mean for <code>tvhours</code> that fell <strong>between</strong> the green and blue dashed lines…25 of the samples had a mean above the blue dashed line, and 25 of the samples had a mean below the green dashed line.</p>
+<p>The bootstrap distribution and the 95% <strong>bootstrap percentile</strong> confidence intervals we just calculated are shown in the figure below. This is a histogram of the <code>stat</code> values from <code>boot_distrib_tv</code>. The green line is the lower bound of the 95% CI, and the blue line is the upper bound. 950 of the 1000 bootstrap resamples had a mean for <code>tvhours</code> that fell <strong>between</strong> the green and blue dashed lines…25 of the samples had a mean above the blue dashed line, and 25 of the samples had a mean below the green dashed line.</p>
 <pre class="r"><code>ggplot(data = boot_distrib_tv, aes(x = stat)) + 
   geom_histogram(color = &quot;black&quot;, fill = &quot;pink&quot;, binwidth = 0.15) + 
   labs(title = &quot;Bootstrap distribution with 95% CI&quot;, 
