@@ -19,7 +19,9 @@ knitr::opts_chunk$set(echo = TRUE, fig.align = "center", comment = NA, message =
 library(scales)
 ```
 
-![](https://i.pinimg.com/originals/8b/a5/6d/8ba56d685c24a243836ace7332f553f7.jpg)
+```{r, echo = FALSE}
+knitr::include_graphics("https://i.pinimg.com/originals/8b/a5/6d/8ba56d685c24a243836ace7332f553f7.jpg", dpi = 126)
+```
 
 
 # Background
@@ -41,11 +43,14 @@ library(moderndive)
 Next, load the data set from where it is stored on the web: 
 
 ```{r}
-gss_sample <- read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSypSoDCMH2N76Vo2dZRPkw2q3t1mbvAXlOtgPDIsHg4NclAQFmER-BdvXH9_lrT40UQCVdPXOi_NMJ/pub?gid=257689625&single=true&output=csv")
+if(!dir.exists("./Data")){dir.create("./Data")}
+url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vSypSoDCMH2N76Vo2dZRPkw2q3t1mbvAXlOtgPDIsHg4NclAQFmER-BdvXH9_lrT40UQCVdPXOi_NMJ/pub?gid=257689625&single=true&output=csv"
+if(!file.exists("./Data/gss_sample.csv")){ download.file(url, destfile = "./Data/gss_sample.csv")}
+gss_sample <- read_csv("./Data/gss_sample.csv")
+DT::datatable(gss_sample, rownames = FALSE)
 ```
 
-Be sure to take a look at the data in the **viewer**. Each row in the data set is a person that was surveyed (100 rows or cases in total). The variables in the data set include each respondent's `age`,  `race`, and number of hours of TV watched a day `tvhours`. 
-
+Be sure to take a look at the data in Figure \@ref(fig:gssData). Each row in the data set is a person that was surveyed (100 rows or cases in total). The variables in the data set include each respondent's `age`,  `race`, and number of hours of TV watched a day `tvhours`. 
 
 **Setting a seed:** We will take some random samples and build sampling distributions in this lab. In order to make sure R takes the same random sample every time you run your code, you can do what is called "setting a seed". Do this in any code chunk that you take a random sample! 
 
@@ -71,14 +76,19 @@ boot_samp_1000 <- gss_sample %>%
 
 Note a few important details about the `rep_sample_n` function, and bootstrap sampling in general:
 
-* `size = nrow(gss_sample)` tells R that each bootstrap resample we take has 100 cases... the size of the original sample
+* `size = nrow(gss_sample)` tells R that each bootstrap resample we take has `r nrow(gss_sample)` cases... the size of the original sample.
 * `reps = 1000` tells R to take 1000 bootstrap resamples (each of size 100).
 * The `replace = TRUE` argument tells R that in each bootstrap resample, we can include a row from `gss_sample` multiple times. So if for instance, respondent # 12 is the first random resample taken here, respondent 12 is still available to be resampled **again** at random. Thus, some people may appear **multiple times** in our bootstrap resample, and some people from the original data set may not appear at all. 
 * We save the results in a data frame `boot_samp_1000`. 
+ 
 
-*** 
+Take a look at the  `boot_samp_1000` data frame we just generated in Figure \@ref(fig:bootsamp1000). Note that the `replicate` column labels each bootstrap resample (the first 100 rows are labeled 1, the next 100 rows are labeled 2, etc.)
 
-Take a look at the `boot_samp_1000` data frame we just generated in RStudio's data viewer. Note that the `replicate` column labels each bootstrap resample (the first 100 rows are labeled 1, the next 100 rows are labeled 2, etc.)
+```{r, label = "bootsamp1000", fig.cap = "Bootstrap Distribution"}
+DT::datatable((boot_samp_1000))
+```
+
+__________________
 
 
 1.  How many rows does `boot_samp_1000` have? **Why?** 
@@ -89,7 +99,7 @@ Type your complete sentence answer here using inline R code and delete this comm
 
 </div> 
 
-***
+___________________
 
 ## Step 2: Calculate the Bootstrap Statistic{-}
 
@@ -99,6 +109,8 @@ Let's say we want to use the bootstrap resample that we just generated to calcul
 boot_distrib_tv <- boot_samp_1000 %>% 
   group_by(replicate) %>% 
   summarize(stat = mean(tvhours))
+# Viewing the data
+head(boot_distrib_tv)
 ```
 
 Note that:
@@ -125,21 +137,22 @@ for(i in 1:B){
 }
 ```
 
-*** 
+___________________
 
 Take a look at the `boot_distrib_tv` we just created in RStudio's data viewer. 
 
 
-2.  How many values of the bootstrap statistic `stat` are there?  Please explain **why** there are this many values of the bootstrap statistic. 
+2.  How many values of the bootstrap statistic `stat` are there in the object `boot_distrib_tv`?  Please explain **why** there are this many values of the bootstrap statistic. 
 
 <div id="answer">
 Type your complete sentence answer here using inline R code and delete this comment.
 
+* 
 
 </div> 
 
 
-*** 
+___________________
 
 ## Visualizing the Bootstrap Distribution{-}  
 
@@ -157,7 +170,7 @@ ggplot(data = boot_distrib_tv, aes(x = stat)) +
 visualize(boot_dist_tv_infer, bins = 9)
 ```
 
-```{r}
+```{r, label = "basehist", fig.height=3, fig.width=5, fig.cap = "Bootstrap distribution of mean TV hours (base R histogram)"}
 hist(bs_mean, breaks = "Scott", main = "Bootstrap Distribution",
      xlab = expression(paste(bar(x),"*")), col = "lightblue")
 ```
@@ -251,7 +264,7 @@ boot_dist_tv_infer %>% visualize() +
 ```
 
 
-***
+___________________
 
 
 3.  **If** we calculated a **90% bootstrap percentile** confidence interval for the mean of `tvhours` using this same bootstrap resample and the percentile method, roughly how many of the 1000 values of `tv_mean` would fall between the `lower_ci` and the `upper_ci`?
@@ -259,13 +272,19 @@ boot_dist_tv_infer %>% visualize() +
 <div id="answer">
 Type your complete sentence answer here using inline R code and delete this comment.
 
+*
+
+```{r}
+# Code to verify here
+
+```
 
 </div> 
 
-***
+___________________
 
 
-4.  Use the bootstrap resampling distribution for `tvhours` generated above (`boot_distrib_tv`)  and the **bootstrap percentile** method to calculate a 99% **bootstrap percentile** confidence interval for the mean `tvhours`.
+4.  Use the bootstrap resampling distribution for `tvhours` generated above (`boot_distrib_tv`)  and the **bootstrap percentile** method to calculate a 99% **bootstrap percentile** confidence interval for the mean `tvhours`.  Round your answer to two decimal places.  Make sure to use inline R code to report your answer and include appropriate units with the confidence interval.
 
 ```{r}
 # Type your code and comments inside the code chunk
@@ -275,10 +294,11 @@ Type your complete sentence answer here using inline R code and delete this comm
 <div id="answer">
 Type your complete sentence answer here using inline R code and delete this comment.
 
+* 
 
 </div> 
 
-***
+___________________
 
 
 5.  Which confidence interval is **WIDER**: the 95% confidence interval or the 99% confidence interval for the population mean `tvhours` $\mu_{tv}$? Why?
@@ -286,17 +306,23 @@ Type your complete sentence answer here using inline R code and delete this comm
 <div id="answer">
 Type your complete sentence answer here using inline R code and delete this comment.
 
+* 
 
 </div> 
 
-***
+___________________
 
 6.  Use the bootstrap resample we generated above (`boot_samp_1000`), to generate a **bootstrap distribution** for the sample mean respondent `age` $\bar{x}$ instead of `tvhours`. Please be sure to **name it something different** than the bootstrap distribution for the sample mean of `tvhours`
 
 ```{r}
 # Type your code and comments inside the code chunk
 
+# Using infer
+
 ```
+
+___________________
+
 
 7.  Calculate a 95% confidence interval for the population mean respondent `age` $\mu_{age}$ using the **95% rule** method. 
 
@@ -306,10 +332,14 @@ Type your complete sentence answer here using inline R code and delete this comm
 ```
 
 <div id="answer">
-Type your complete sentence answer here using inline R code and delete this comment.  Round your answers to one decimal place.
+Type your complete sentence answer here using inline R code and delete this comment.  Round your answers to two decimal places.
 
+*
 
 </div> 
+
+_____________________________
+
 
 8. Calculate a 95% bootstrap percentile confidence interval for the population mean respondent `age` $\mu_{age}$. 
 
@@ -321,18 +351,23 @@ Type your complete sentence answer here using inline R code and delete this comm
 <div id="answer">
 Type your complete sentence answer here using inline R code and delete this comment.
 
+* 
 
 </div> 
+
+________________
+
 
 9.  How do the 95% confidence intervals you calculated in 7 and 8 compare? i.e. are the 95% CI values similar or are they pretty different?
 
 <div id="answer">
 Type your complete sentence answer here using inline R code and delete this comment.
 
+*
 
 </div> 
 
-***
+_________________
 
 
 10.  Use the **bootstrap resampling distribution** for the sample mean respondent `age` and the percentile method to calculate an 80% confidence interval for the population mean respondent age $\mu_{age}$.
@@ -345,10 +380,11 @@ Type your complete sentence answer here using inline R code and delete this comm
 <div id="answer">
 Type your complete sentence answer here using inline R code and delete this comment.
 
+*
 
 </div> 
 
-***
+___________
 
 # Bootstrap Sampling Distribution & Confidence Intervals with Categorical Variables
 
@@ -401,6 +437,7 @@ boot_distrib_POC %>%
             upper_ci = quantile(boot_stat, 0.975))
 ```
 
+_____________
 
 11. Calculate a 95% CI for the **population proportion** of respondents $p$ who identified as **White** using BOTH the percentile and the 95% rule method. Note that you will first need to generate the bootstrap distribution for the proportion of respondents who identified as `White`. 
 
@@ -425,11 +462,13 @@ boot_distrib_POC %>%
 <div id="answer">
 Type your complete sentence answer here using inline R code and delete this comment.
 
+*
 
 </div> 
 
 
-***
+________________
+
 
 
 
@@ -467,6 +506,8 @@ gss_sample %>%
 tci_tv
 ```
 
+___________
+
 
 12. Write down the three 95% confidence intervals for the population mean of `tvhours` $\mu_{tv}$ you've computed in this problem set. Do this by replacing
 X, Y, A, B, P, and Q with the appropriate values you've computed. 
@@ -480,7 +521,7 @@ Using boostrap: 95% rule        | X             | Y
 Using boostrap: percentile rule | A             | B
 Using mathematical formula      | P             | Q
 
-
+______________
 
 13.  **In your opinion**: would you say these three confidence intervals are similar?
 
@@ -488,9 +529,9 @@ Using mathematical formula      | P             | Q
 <div id="answer">
 Type your complete sentence answer here using inline R code and delete this comment.
 
-
+* 
 </div> 
 
 
-***
+_____________
 
