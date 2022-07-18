@@ -12,6 +12,8 @@ output:
     css: MyLab.css 
 ---
 
+____________
+
 ```{r include = FALSE}
 # Do not edit this code block/chunk!
 library(knitr)
@@ -60,7 +62,7 @@ You can set a seed like so. Any number will do. (You do not need to run this rig
 set.seed(45)
 ```
 
-***
+____________
 
 # Confidence Intervals from a Bootstrap Resample
 
