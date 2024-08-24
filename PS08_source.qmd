@@ -6,7 +6,7 @@ date-format: "[Last modified on] MMMM DD, YYYY HH:mm:ss zzz"
 format: 
   html: default
   pdf: default
-editor: visual
+editor: source
 ---
 
 ```{r include = FALSE}
@@ -70,7 +70,7 @@ The following code tells `R` to take 1000 bootstrap resamples from the `gss_samp
 ::: {.callout-caution icon="false" title="R Code"}
 ```{r}
 set.seed(42)
-boot_samp_1000 <- gss_sample %>% 
+boot_samp_1000 <- gss_sample |> 
   rep_sample_n(size = nrow(gss_sample), 
                reps = 1000, 
                replace = TRUE)
@@ -110,8 +110,8 @@ Let's say we want to use the bootstrap resample that we just generated to calcul
 
 ::: {.callout-caution icon="false" title="R Code 5"}
 ```{r}
-boot_distrib_tv <- boot_samp_1000 %>% 
-  group_by(replicate) %>% 
+boot_distrib_tv <- boot_samp_1000 |> 
+  group_by(replicate) |> 
   summarize(stat = mean(tvhours))
 # Viewing the data
 kable(head(boot_distrib_tv))
@@ -133,9 +133,9 @@ kable(head(boot_distrib_tv))
 # infer pipeline
 set.seed(321)
 library(infer)
-boot_dist_tv_infer <- gss_sample %>% 
-  specify(response = tvhours) %>% 
-  generate(reps = 1000, type = "bootstrap") %>% 
+boot_dist_tv_infer <- gss_sample |> 
+  specify(response = tvhours) |> 
+  generate(reps = 1000, type = "bootstrap") |> 
   calculate(stat = "mean")
 #
 kable(head(boot_dist_tv_infer))
@@ -239,13 +239,13 @@ We can thus apply the 95% rule, like so:
 # Note that z_{0.975} = 1.96 
 qnorm(0.975)
 (xbar <- mean(gss_sample$tvhours)) # mean of the original sample
-boot_dist_tv_infer %>% 
+boot_dist_tv_infer |> 
   summarize(se = sd(stat), 
             lower_ci = xbar - (qnorm(0.975) * se), 
             upper_ci = xbar + (qnorm(0.975) * se)) -> bnci_tv
 kable(bnci_tv)
 #
-standard_error_ci <- boot_dist_tv_infer %>% 
+standard_error_ci <- boot_dist_tv_infer |> 
   get_confidence_interval(level = 0.95, 
                           type = "se", 
                           point_estimate = xbar)
@@ -271,17 +271,17 @@ We can use **the quantiles** of the bootstrap distribution to find these values 
 
 ::: {.callout-caution icon="false" title="R Code"}
 ```{r}
-bpci_tv <- boot_dist_tv_infer %>% 
+bpci_tv <- boot_dist_tv_infer |> 
   summarize(lower_ci = quantile(stat, 0.025), 
             upper_ci = quantile(stat, 0.975))
 
 kable(bpci_tv)
 # Or using get_confidence_interval()
-boot_dist_tv_infer %>% 
-  get_confidence_interval(level = 0.95, type = "percentile") %>% 
+boot_dist_tv_infer |> 
+  get_confidence_interval(level = 0.95, type = "percentile") |> 
   kable()
 # Which is really just doing the following:
-PCI <- boot_dist_tv_infer %>% 
+PCI <- boot_dist_tv_infer |> 
             summarize(lower_ci = quantile(stat, 0.025),
                       upper_ci = quantile(stat, 0.975))
 kable(PCI)
@@ -322,7 +322,7 @@ ggplot(data = boot_dist_tv_infer, aes(x = stat)) +
 
 ::: {.callout-caution icon="false" title="R Code"}
 ```{r, fig.height=3, fig.width=5}
-boot_dist_tv_infer %>% visualize() +
+boot_dist_tv_infer |> visualize() +
   shade_confidence_interval(endpoints = PCI, color = "red", fill = "pink")
 
 ```
@@ -438,8 +438,8 @@ We already did this above! We can use the same `boot_samp_1000` as before.
 
 ::: {.callout-caution icon="false" title="R Code"}
 ```{r}
-boot_distrib_POC <- boot_samp_1000 %>% 
-  group_by(replicate) %>% 
+boot_distrib_POC <- boot_samp_1000 |> 
+  group_by(replicate) |> 
   summarize(n = n(), 
             POC_count = sum(race == "POC"), 
             boot_stat = POC_count/n,
@@ -461,9 +461,9 @@ To get our proportion $\widehat{p}$ of **ONE** of the race categories (POC), we 
 ```{r}
 # Or using infer
 set.seed(32)
-gss_sample %>% 
-  specify(response = race, success = "POC") %>% 
-  generate(reps = 1000, type = "bootstrap") %>% 
+gss_sample |> 
+  specify(response = race, success = "POC") |> 
+  generate(reps = 1000, type = "bootstrap") |> 
   calculate(stat = "prop") -> boot_dist_POC_infer
 kable(head(boot_dist_POC_infer))
 ```
@@ -478,16 +478,16 @@ The following will calculate the 95% confidence interval for the proportion of p
 ::: {.callout-caution icon="false" title="R Code"}
 ```{r}
 phat <- mean(gss_sample$race=="POC")
-boot_distrib_POC %>% 
+boot_distrib_POC |> 
   summarize(se = sd(boot_stat), 
             lower_ci = phat - (qnorm(0.975) * se), 
-            upper_ci = phat + (qnorm(0.975) * se)) %>% 
+            upper_ci = phat + (qnorm(0.975) * se)) |> 
   kable()
 ### Using infer
-boot_dist_POC_infer %>% 
+boot_dist_POC_infer |> 
   get_confidence_interval(level = 0.95, 
                           type = "se", 
-                          point_estimate = phat) %>% 
+                          point_estimate = phat) |> 
   kable()
 ```
 :::
@@ -498,15 +498,15 @@ The following will calculate the 95% confidence interval for the proportion of p
 
 ::: {.callout-caution icon="false" title="R Code"}
 ```{r}
-boot_distrib_POC %>% 
+boot_distrib_POC |> 
   summarize(lower_ci = quantile(boot_stat, 0.025), 
-            upper_ci = quantile(boot_stat, 0.975)) %>% 
+            upper_ci = quantile(boot_stat, 0.975)) |> 
   kable()
 ### Using infer
-boot_dist_POC_infer %>% 
+boot_dist_POC_infer |> 
   get_confidence_interval(level = 0.95, 
                           type = "percentile", 
-                          point_estimate = phat) %>% 
+                          point_estimate = phat) |> 
   kable()
 ```
 :::
@@ -573,7 +573,7 @@ We can perform the calculations in `R` as follows:
 ::: {.callout-caution icon="false" title="R Code"}
 ```{r}
 x_bar = mean(gss_sample$tvhours)
-gss_sample %>% 
+gss_sample |> 
   summarize(sd = sd(tvhours), 
             n = n(), 
             se = sd/sqrt(n), 
